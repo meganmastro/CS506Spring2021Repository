@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import re
+import copy
 import matplotlib.pyplot as plt
 from nltk.stem import WordNetLemmatizer 
 from nltk.corpus import stopwords
