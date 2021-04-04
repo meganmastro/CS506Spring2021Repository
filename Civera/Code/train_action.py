@@ -3,7 +3,9 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import re
+from csv import writer
 import copy
+import os 
 import matplotlib.pyplot as plt
 from nltk.stem import WordNetLemmatizer 
 from nltk.corpus import stopwords
@@ -12,11 +14,12 @@ from nltk.tokenize import word_tokenize, sent_tokenize
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, PolynomialFeatures
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.model_selection import train_test_split
-
+from sklearn.ensemble import VotingClassifier
 from sklearn.metrics import mean_squared_error, confusion_matrix
 from sklearn.pipeline import Pipeline
 from sklearn.svm import LinearSVC
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import MultinomialNB
 
 import mysql.connector
 
@@ -29,28 +32,28 @@ else:
 
 mycursor = mydb.cursor()
 
-#load sql to dataframe 
-case_index_not_null = pd.read_sql("SELECT * FROM wp_courtdocs.cdocs_case_action_index as c_a_index WHERE c_a_index.action != ' ' and c_a_index.actor != ' ' and rand() <= .2;", con = mydb)
 
+# Load sql to dataframe 
+# Get Training Set (Action != NULL and Actor != NULL)
+# Getting 20000 values first 
+case_index_not_null = pd.read_sql("SELECT * FROM wp_courtdocs.cdocs_case_action_index as c_a_index WHERE c_a_index.action != ' ' and c_a_index.actor != ' ' LIMIT 20000;", con = mydb)
 columns = ['actor','action','description']
 trainSet = case_index_not_null[columns]
 print(trainSet.head())
 
-# cdocs_case_action_index / actor = null
-action_null = pd.read_sql("SELECT * FROM wp_courtdocs.cdocs_case_action_index as c_a_index WHERE c_a_index.action = ' ' and c_a_index.actor != ' ' and rand() <= .2;", con = mydb)
+# Get Test Set (Action = NULL)
+# Getting 20000 values first 
+action_null = pd.read_sql("SELECT * FROM wp_courtdocs.cdocs_case_action_index as c_a_index WHERE c_a_index.action = ' ' LIMIT 20000;", con = mydb)
 testSet = action_null[columns]
 print(testSet.head())
 
+# Get Distinct Values of Actions Field with Index Number 
+path1 = 'C:\\Users\\Serra\\Desktop\\civera\\distinct-case-actions.csv'
+distinct_actions = pd.read_csv(path1)
+print(distinct_actions.head())
 
-# X = trainingSet[['action','description']]
-# y = trainingSet['actor']
-
-# X_train, X_test, y_train, y_test = train_test_split(X,y,test_size = 0.2, random_state = 42)
-
-#distinct values
-df = pd.read_csv('./Civera/Data/distinct-case-actions.csv', index_col=int)
-print(df.head())
-
+trainSet = trainSet.merge(distinct_actions, on='action')
+print(trainSet.head())
 
 r = re.compile(r'[^\w\s]+')
 trainSet['description'] = [r.sub('', x) for x in trainSet['description'].tolist()]
@@ -94,89 +97,52 @@ print()
 trainSet1['description'] = trainSet1['description'].astype('str')
 testSet1['description'] = testSet1['description'].astype('str')
 
-#trainSet1.to_csv("./Civera/Data/action_train.csv", mode='w', index = False, header = False)
-#testSet1.to_csv("./Civera/Data/action_test.csv", mode='w', index = False, header = False)
+print("preprocessing done")
+
+X = trainSet1['description']
+y = trainSet1['action_index']
+
+print("train-test-split processing")
+X_train, X_test, y_train, y_test = train_test_split(X,y,test_size = 0.2, random_state = 42)
+
+#path2 = 'C:\\Users\\Serra\\Desktop\\civera\\action_train.csv'
+#path3 = 'C:\\Users\\Serra\\Desktop\\civera\\action_test.csv'
+#trainSet1.to_csv(path2, mode='w', index = False, header = False)
+#testSet1.to_csv(path3, mode='w', index = False, header = False)
 
 
+# clf = Pipeline([('tfidf', TfidfVectorizer()),('lsvc', LinearSVC(dual=False,C = 0.2)),])
 
-print("done")
+# # training data through the pipeline
+# clf.fit(X_train, y_train)
 
-# text_clf2 = Pipeline([('tfidf', TfidfVectorizer()),
-#                      ('rdf',RandomForestClassifier()),
-# ])
-# # Feed the training data through the pipeline
-# text_clf2.fit(X_train[:10000], y_train[:10000])
+clf2 = Pipeline([('tfidf', TfidfVectorizer()),('rdf',RandomForestClassifier()),])
+# training data through the pipeline
+clf2.fit(X_train, y_train)
 
+clf3 = Pipeline([('tfidf', TfidfVectorizer()),('mnb',MultinomialNB()),])
+# training data through the pipeline
+clf3.fit(X_train, y_train)
 
-#Preparing data
-X_train, X_test, Y_train, Y_test = train_test_split(
-        trainSet1['actor','description'],
-        trainSet1['action'],
-        test_size=1
-    )
+# estimators=[('SVC',clf),('RDF',clf2),('MNB',clf3)]
+# votingclassfier for all the models
+# ensemble = VotingClassifier(estimators, voting='hard')
+# #fit model to training data
+# ensemble.fit(X_train, y_train)
 
-# # Process the DataFrames
-# # This is where you can do more feature extraction
-# #X_train_processed = X_train.drop(columns=['Id', 'Text', 'ProductId', 'UserId'])
-# #X_test_processed = X_test.drop(columns=['Id', 'Text', 'ProductId', 'UserId'])
-# # X_submission_processed = X_submission.drop(columns=['Id', 'Text', 'ProductId', 'UserId', 'Score'])
+predictions = clf3.predict(testSet1['description'])
+print(predictions.shape)
 
-# # I tried to add some interaction terms - then SVD takes a bit longer
-# poly = PolynomialFeatures(interaction_only=True, include_bias = False).fit(X_train_processed)
-# X_train_processed = poly.transform(X_train_processed)
-# X_test_processed = poly.transform(X_test_processed)
-# X_submission_processed = poly.transform(X_submission_processed)
+#Create a  DataFrame with the passengers ids and our prediction regarding whether they survived or not
+submission = pd.DataFrame({'actor':testSet1['actor'],'description':testSet1['description'],'action_index':predictions})
+#Visualize the first 5 rows
+print("prediction")
+print(submission.head())
+submission = submission.merge(distinct_actions, on='action_index') 
 
-# # Scales the data to the (0, 1) range
-# # You can also use StandarScalar
-# scaler = MinMaxScaler().fit(X_train_processed)
-# X_train_processed = scaler.transform(X_train_processed)
-# X_test_processed = scaler.transform(X_test_processed)
-# X_submission_processed = scaler.transform(X_submission_processed)
+path4 = 'C:\\Users\\Serra\\Desktop\\civera\\multiNB-prediction.csv'
+#path5 = 'C:\\Users\\Serra\\Desktop\\civera\\RandomF-prediction.csv'
+submission.to_csv(path4, mode='w', index = False)
+#submission.to_csv(path5, mode='w', index = False)
+#testSet1.to_csv(path3, mode='w', index = False, header = False)
 
-# # Visualize the singular value plot
-# # u,s,vt=np.linalg.svd(X_train_processed,full_matrices=False)
-# # _ = plt.plot(s)
-# # plt.title('Singular values of X_train')
-# # # plt.show()
-
-# # Pick N_COMPONENTS based on above plot
-# pca = PCA(n_components=N_COMPONENTS).fit(X_train_processed)
-# X_train_processed = pca.transform(X_train_processed)
-# X_test_processed = pca.transform(X_test_processed)
-# X_submission_processed = pca.transform(X_submission_processed)
-
-# # Trying to set class weights manually
-# class_weight = {1.0: 1.5, 2.0: 3.0, 3.0: 2.5, 4.0: 1.5, 5.0: 0.5}
-
-# # Learn the model
-# # Note: I experimented with a few penalty / solvers
-# lr = LogisticRegression(penalty='l1', verbose=2, solver='saga', max_iter=300, class_weight=class_weight)
-
-# # Boost the model
-# # Note: it took too much time to run so I didn't use it
-# # bagging = AdaBoostClassifier(lr, n_estimators=30, n_jobs=3)
-
-# model = lr.fit(X_train_processed, Y_train)
-
-# # Predict the score using the model
-# Y_test_predictions = model.predict(X_test_processed)
-# X_submission['Score'] = model.predict(X_submission_processed)
-
-# # Evaluate your model on the testing set
-# print("RMSE on testing set = ", math.sqrt(mean_squared_error(Y_test, Y_test_predictions)))
-
-# # Plot a confusion matrix
-# cm = confusion_matrix(Y_test, Y_test_predictions, normalize='true')
-# sns.heatmap(cm, annot=True)
-# plt.title('Confusion matrix of the classifier')
-# plt.xlabel('Predicted')
-# plt.ylabel('True')
-# plt.show()
-
-# # Note: based on the confusion matrix you could
-# # play around with the weights
-
-# # Create the submission file
-# submission = X_submission[['Id', 'Score']]
-# submission.to_csv("./data/submission.csv", index=False)
