@@ -1,0 +1,159 @@
+,1
+,2
+,3
+,4
+,5
+,6
+,7
+,8
+,9
+,10
+,11    - newly 101
+Assent And Waiver Of Notice fi,12   ERROR: Failed parsing OK packet. *added manually*
+Bankruptcy stay of proceedings,13   ERROR: Failed parsing OK packet. *added manually*
+,14
+,15
+,16
+,17
+,18
+,19
+,20
+,21
+,22
+,23    - newly 201 
+Change of address,24   ERROR: Failed parsing OK packet. *added manually*
+,25
+,26
+,27
+,28
+,29
+,30
+,31
+,32
+,33
+,34
+,35
+,36
+,37
+,38
+,39
+,40
+,41
+,42
+,43
+,44
+,45
+,46
+,47
+,48
+,49
+,50
+,51
+,52
+,53
+,54
+,55
+,56
+,57
+,58
+,59
+,60
+,61
+,62
+,63
+,64
+,65
+,66
+,67
+,68
+,69
+,70
+,71     - newly 650
+Motion for summary judgment,72   ERROR: Failed parsing OK packet. *added manually*
+,73
+,74
+,75
+,76
+,77
+,78
+,79
+,80
+,81
+,82
+,83
+,84
+,85
+,86
+,87
+,88
+,89
+,90
+,91
+,92
+,93
+,94
+,95
+,96
+,97
+,98
+,99
+Notice of claim,100   NO ACTOR *added manually*
+,101
+,102
+,103
+,104
+,105
+,106
+,107
+Notice to quit filed,108   NO ACTOR *added manually*
+,109
+,110
+,111
+,112
+,113
+,114
+,115
+,116
+,117
+,118
+,119
+,120
+,121
+,122
+,123
+,124
+,125
+,126
+,127
+,128
+Release of All Demands and Ass,129   NO ACTOR *added manually*
+,130
+,131
+,132
+,133
+,134
+,135
+,136
+,137
+,138
+,139     - newly 1198
+
+__SERRA__
+Statement of Voluntary Adminis,140
+Status Review,141
+Suggestion of bankruptcy filed,142
+Suggestion of death filed,143
+Summary Process Summons and Co,144
+Summons,145
+System Notes,146
+Termination notice filed,147
+Third-party cross-claim filed,148
+Transfer of case,149
+Trial,150
+UCC filed,151
+Under Advisement,152
+Verification of Defendant's Ad,153
+Waiver of Attorneys Fees filed,154
+Waiver of Award of Pre-Judgmen,155
+Waiver of jury trial,156
+Witness list filed,157
