@@ -33,12 +33,14 @@ else:
 mycursor = mydb.cursor()
 
 columns = ['action','description']
-custom_training = pd.read_csv("C:\\Users\\Serra\\Desktop\\CS506Spring2021Repository\\Civera\\Data\\custom-training.txt", error_bad_lines=False)
+
+# /Users/meganmastrorilli/CS506Spring2021Repository/Civera/Data/distinct-case-actions.txt
+custom_training = pd.read_csv("/Users/meganmastrorilli/CS506Spring2021Repository/Civera/Data/custom-training.txt", error_bad_lines=False)
 training = custom_training[columns]
 print(training.head())
 print(training.shape)
 
-custom_training1 = pd.read_sql("SELECT c_a_index.actor, c_a_index.action, c_a_index.description FROM wp_courtdocs.cdocs_case_action_index as c_a_index where  c_a_index.action = 'Affidavit in support of motion' LIMIT 10;", con = mydb)
+custom_training1 = pd.read_sql("SELECT c_a_index.actor, c_a_index.action, c_a_index.description FROM wp_courtdocs.cdocs_case_action_index as c_a_index where  c_a_index.action = 'Agreement for Judgment' LIMIT 10;", con = mydb)
 training1 = custom_training1[columns]
 print(training1.head())
 print(training1.shape)
@@ -48,5 +50,5 @@ training = training.append(training1, ignore_index=True)
 print(training.head())
 print(training.shape)
 
-path = 'C:\\Users\\Serra\\Desktop\\CS506Spring2021Repository\\Civera\\Data\\custom-training.txt'
+path = '/Users/meganmastrorilli/CS506Spring2021Repository/Civera/Data/custom-training.txt'
 training.to_csv(path, mode='w', index = False) 
